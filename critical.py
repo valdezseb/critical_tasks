@@ -19,7 +19,7 @@ file = st.file_uploader('Upload a file', type=['csv', 'xlsx'])
 
 # If a file is uploaded, read it into a DataFrame
 if file is not None:
-    df = pd.read_csv(file) if file.type == 'text/csv' else pd.read_excel(file, engine="openpyxl")
+    df =  pd.read_excel(file, engine="openpyxl")
 
     # Display a list of columns in the file
     st.write('Columns in the file:')
