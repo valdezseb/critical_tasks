@@ -192,7 +192,7 @@ if uploaded_file is not None:
         if filtered_df is not None:
             filtered_df = filtered_df.sort_values(by=[finish_column, start_column], ascending=False)
             # Define the corporate colors
-            colors = {'Complete': 'green', 'Complete': 'blue', 'On Schedule': 'orange', 'Future Task': 'purple'}
+            colors = {'Complete': 'blue', 'Late': 'red', 'On Schedule': 'orange', 'Future Task': 'purple'}
             # Add a title to the chart
             filtered_df[start_column] = pd.to_datetime(filtered_df[start_column])
             filtered_df[finish_column] = pd.to_datetime(filtered_df[finish_column])
