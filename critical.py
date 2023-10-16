@@ -1,5 +1,3 @@
-
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -235,10 +233,13 @@ if uploaded_file is not None:
     
     
                 # Create and display the Gantt chart
-                fig = px.timeline(filtered_df, x_start=start_column, x_end=finish_column, y=y_labels,
+                fig = px.timeline(filtered_df, x_start=start_column, x_end=finish_column, y=id_col,
                                    color=status_column,   color_discrete_map=colors)
+
+               
+
     
-    
+                
     
     
                 fig.update_layout(title='Project Timeline', font=dict(family='Arial', size=16), width=800, height=600)
@@ -248,21 +249,22 @@ if uploaded_file is not None:
                 zero_duration_tasks = filtered_df[filtered_df[start_column] == filtered_df[finish_column]]
     
                 status_colors = {
-                        'Future Task': 'gray',
+                        'Future Task': 'purple',
                         'In Progress': 'blue',
-                        'Complete': 'green'
+                        'Complete': 'limegreen'
                     }
     
     
     
                 y_labels_milestones = filtered_df['ID'].astype(str)
-    
+                fig.update_yaxes(tickmode='array', tick0=0, dtick=1)
                 # Check if any task is not complete
                 fig.add_trace(go.Scatter(x=zero_duration_tasks[start_column], y=y_labels_milestones, mode='markers',
-                                marker=dict(symbol='star', color=[status_colors[status] for status in zero_duration_tasks[status_column] ], size=15), name='Milestones'))
+                                marker=dict(symbol='star', color=[status_colors.get(status, 'gray') for status in zero_duration_tasks[status_column]], size=15), name='Milestones'))
+
     
     
-                # Set the x-axis to display ticks every month
+                # Set the x-axis to display ticks every month96
                 #fig.update_layout(xaxis=dict(tickmode='linear', dtick='M1'))
     
     
@@ -275,7 +277,8 @@ if uploaded_file is not None:
                                                line=dict(color='red', width=1, dash='dot'))])
     
                  # Update the y-axis to have unique and linearly spaced ticks
-            
+                # Update the y-axis to have unique and linearly spaced ticks
+                #fig.update_layout(yaxis=dict(tickmode='array', tickvals=y_labels, ticktext=y_labels))
     
                 # Display Gantt chart and filtered DataFrame
                 st.markdown('## Project Analysis')
