@@ -222,7 +222,8 @@ if uploaded_file is not None:
                             marker=dict(symbol='star', color=[status_colors[status] for status in zero_duration_tasks[status_column] ], size=15), name='Milestones'))
 
 
-
+            # Set the x-axis to display ticks every month
+            fig.update_layout(xaxis=dict(tickmode='linear', dtick='M1'))
 
 
 
