@@ -138,16 +138,14 @@ def transform_data(df):
     #df['Days_to_Start'] = days_to_start(df, 'ID', 'Start', 'new_Predecessors', 'Status')
     
     return df
-
 def filter_predecessors(df, id):
-    predecessors = df[df['ID'] == id]['new_Predecessors'].tolist()
-
-    if not predecessors or predecessors[0] is None:
-        # Handle empty predecessors list or None
+    predecessors = df[df['ID'] == id]['new_Predecessors'].tolist()[0]
+    if predecessors is None:
         return None
     else:
-        predecessors_list = [int(x) for x in predecessors[0].split(',') if x]
+        predecessors_list = [int(x) for x in predecessors.split(',') if x]
         return df[df['ID'].isin(predecessors_list)]
+
 
 
 # Streamlit code for file upload, column selection, and ID input
@@ -157,6 +155,7 @@ now = datetime.now()
 if uploaded_file is not None:
     # Load data
     df = load_data(uploaded_file)
+
     #df = pd.read_excel(uploaded_file, engine="openpyxl")
 
     # Column selection
@@ -189,22 +188,33 @@ if uploaded_file is not None:
     if task_id:
         filtered_df = filter_predecessors(df, task_id)
 
+
+
         if filtered_df is not None:
-            filtered_df = filtered_df.sort_values(by=[finish_column, start_column], ascending=False)
-            # Define the corporate colors
-            colors = {'Complete': 'blue', 'Late': 'red', 'On Schedule': 'orange', 'Future Task': 'purple'}
-            # Add a title to the chart
             filtered_df[start_column] = pd.to_datetime(filtered_df[start_column])
             filtered_df[finish_column] = pd.to_datetime(filtered_df[finish_column])
 
+            filtered_df = filtered_df.sort_values(by=[finish_column, start_column], ascending=False)
+            # Define the corporate colors
+            colors = {'Complete': 'green', 'Late': 'red', 'On Schedule': 'orange', 'Future Task': 'purple'}
+            # Add a title to the chart
+            
+
+            y_labels = filtered_df['ID'].astype(str)
+
+
+
+
             # Create and display the Gantt chart
-            fig = px.timeline(filtered_df, x_start=start_column, x_end=finish_column, y=filtered_df["ID"].astype(str),
-                               color=status_column, hover_name='ID',  color_discrete_map=colors)
+            fig = px.timeline(filtered_df, x_start=start_column, x_end=finish_column, y=y_labels,
+                               color=status_column,   color_discrete_map=colors)
+
+
+
+
             fig.update_layout(title='Project Timeline', font=dict(family='Arial', size=16), width=1200, height=800)
 
-            # Customize the colors
-            fig.update_traces(marker=dict(color='rgba(50, 50, 50, 0.8)'), selector=dict(mode='markers'))
-            fig.update_traces(marker=dict(color='rgba(100, 100, 100, 0.8)'), selector=dict(mode='lines'))
+           
 
             zero_duration_tasks = filtered_df[filtered_df[start_column] == filtered_df[finish_column]]
 
@@ -216,15 +226,15 @@ if uploaded_file is not None:
 
 
 
-
+            y_labels_milestones = filtered_df['ID'].astype(str)
 
             # Check if any task is not complete
-            fig.add_trace(go.Scatter(x=zero_duration_tasks[start_column], y=zero_duration_tasks['ID'], mode='markers',
+            fig.add_trace(go.Scatter(x=zero_duration_tasks[start_column], y=y_labels_milestones, mode='markers',
                             marker=dict(symbol='star', color=[status_colors[status] for status in zero_duration_tasks[status_column] ], size=15), name='Milestones'))
 
 
             # Set the x-axis to display ticks every month
-            fig.update_layout(xaxis=dict(tickmode='linear', dtick='M1'))
+            #fig.update_layout(xaxis=dict(tickmode='linear', dtick='M1'))
 
 
 
@@ -234,6 +244,13 @@ if uploaded_file is not None:
             fig.update_layout(xaxis=dict(showgrid=False),
                                shapes=[dict(type='line', xref='x', x0=now, x1=now, yref='paper', y0=0, y1=1,
                                            line=dict(color='red', width=1, dash='dot'))])
+
+             # Update the y-axis to have unique and linearly spaced ticks
+            num_tasks = len(filtered_df['ID'])
+            y_tickvals = list(range(1, num_tasks + 1))
+            y_labels = filtered_df['ID'].astype(str)
+            fig.update_layout(yaxis=dict(tickmode='array', tickvals=y_tickvals, ticktext=y_labels))
+
 
             # Display Gantt chart and filtered DataFrame
             st.markdown('## Project Analysis')
