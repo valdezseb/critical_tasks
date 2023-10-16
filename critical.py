@@ -191,14 +191,15 @@ if uploaded_file is not None:
 
         if filtered_df is not None:
             filtered_df = filtered_df.sort_values(by=[finish_column, start_column], ascending=False)
-
+            # Define the corporate colors
+            colors = {'Complete': 'green', 'Complete': 'blue', 'On Schedule': 'orange', 'Future Task': 'purple'}
             # Add a title to the chart
             filtered_df[start_column] = pd.to_datetime(filtered_df[start_column])
             filtered_df[finish_column] = pd.to_datetime(filtered_df[finish_column])
 
             # Create and display the Gantt chart
             fig = px.timeline(filtered_df, x_start=start_column, x_end=finish_column, y=filtered_df["ID"].astype(str),
-                               color=status_column, hover_name='ID')
+                               color=status_column, hover_name='ID',  color_discrete_map=colors)
             fig.update_layout(title='Project Timeline', font=dict(family='Arial', size=16), width=1200, height=800)
 
             # Customize the colors
