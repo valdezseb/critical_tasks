@@ -1,8 +1,4 @@
-import databutton as db
 
-
-user = db.user.get()
-name = user.name if user.name else "you"
 
 import streamlit as st
 import pandas as pd
