@@ -28,7 +28,12 @@ def display_modified_gantt_chart(filtered_df_selected, id_col, start_column, fin
     filtered_df = filtered_df_selected.sort_values(by=[finish_column, start_column], ascending=False)
     
     # Define the corporate colors for the Gantt chart
-    colors = {'Complete': 'green', 'Late': 'red', 'On Schedule': 'orange', 'Future Task': 'purple'}
+    colors = {
+    'Complete': '#37BC9B',      # Green
+    'Late': '#EA5455',          # Red
+    'On Schedule': '#F6AD55',    # Orange
+    'Future Task': '#8854D0'     # Purple
+}
     
     # Create and display the Gantt chart
     fig_modified = px.timeline(filtered_df, x_start=start_column, x_end=finish_column, y=id_col,
@@ -39,10 +44,11 @@ def display_modified_gantt_chart(filtered_df_selected, id_col, start_column, fin
     # Add milestones as scatter markers
     zero_duration_tasks_modified = filtered_df[filtered_df[start_column] == filtered_df[finish_column]]
     status_colors = {
-        'Future Task': '#aea7f1',
-        'In Progress': 'blue',
-        'Complete': 'limegreen'
-    }
+    'Complete': '#37BC9B',      # Green
+    'Late': '#EA5455',          # Red
+    'On Schedule': '#F6AD55',    # Orange
+    'Future Task': '#8854D0'     # Purple
+        }
     fig_modified.add_trace(go.Scatter(x=zero_duration_tasks_modified[start_column], y=zero_duration_tasks_modified[id_col],
                                      mode='markers', marker=dict(symbol='star', color=[
                                      status_colors.get(status, 'gray') for status in zero_duration_tasks_modified[status_column]],
@@ -72,11 +78,11 @@ def mat_plot(df, id_col, start_column, finish_column, status_column, now):
                     
                         # Define task colors based on status
                         status_colors = {
-                            'Complete': 'green',
-                            'Late': 'red',
-                            'On Schedule': 'orange',
-                            'Future Task': 'purple'
-                        }
+                            'Complete': '#37BC9B',      # Green
+                            'Late': '#EA5455',          # Red
+                            'On Schedule': '#F6AD55',    # Orange
+                            'Future Task': '#8854D0'     # Purple
+                                }
                     
                         # Create the Gantt chart figure
                         fig, ax = plt.subplots(figsize=(12, 6))
@@ -556,13 +562,25 @@ if uploaded_file is not None:
                                 st.subheader("Updated DataFrame - Finish Dates")
                                 st.dataframe(filtered_df_selected)
 
-                                display_modified_gantt_chart(filtered_df_selected, id_col, start_column, finish_column, status_column, now)
+                                try:
+                                    
+                                    fig_x = display_modified_gantt_chart(filtered_df_selected, id_col, start_column, finish_column, status_column, now)
+                                
+                                except(NameError):
+                                    st.warning("Name Error")
+                                
+                                else:
+                                    with st.container():
+                                        st.plotly_chart(fig_x)
 
+
+                                
                                 if st.button("Static Gantt?", key="Gantt-modified"):
                               
-                                    fig3 = mat_plot(filtered_df, id_col, start_column, finish_column, status_column, now)
+                                    fig3 = mat_plot(filtered_df_selected, id_col, start_column, finish_column, status_column, now)
                                     # Display the figure using st.pyplot()
-                                    st.pyplot(fig3)
+                                    with st.container():
+                                        st.pyplot(fig3)
                                                                  
         else:
             st.write("No tasks found for the selected ID.")
@@ -584,7 +602,6 @@ if uploaded_file is not None:
         
                 # Define the corporate colors
 
-                
                 colors = {'Complete': '#a4c8e9', 'Late': '#ff6700', 'On Schedule': '#0461b2', 'Future Task': 'purple'}
                 # Add a title to the chart
                 
