@@ -55,10 +55,11 @@ def display_modified_gantt_chart(filtered_df_selected, id_col, start_column, fin
     fig_modified.update_layout(xaxis=dict(showgrid=False),
                                shapes=[dict(type='line', xref='x', x0=now, x1=now, yref='paper', y0=0, y1=1,
                                             line=dict(color='red', width=1, dash='dot'))])
+
+    return fig_modified
     
-    # Display the modified Gantt chart
-    st.subheader('Modified Gantt Chart')
-    st.plotly_chart(fig_modified)
+
+
 
 
 def mat_plot(df, id_col, start_column, finish_column, status_column, now):
@@ -478,75 +479,18 @@ if uploaded_file is not None:
             
             else:
                 
-
-                filtered_df = filtered_df.sort_values(by=[finish_column, start_column], ascending=False)
-                # Define the corporate colors
-                colors = {'Complete': 'green', 'Late': 'red', 'On Schedule': 'orange', 'Future Task': 'purple'}
-                # Add a title to the chart
                 
-    
-                y_labels = filtered_df['ID'].astype(str)
-    
-    
-    
-    
-                # Create and display the Gantt chart
-                fig = px.timeline(filtered_df, x_start=start_column, x_end=finish_column, y=id_col,
-                                   color=status_column,   color_discrete_map=colors)
-
-               
-
-    
-                
-    
-    
-                fig.update_layout(title='Project Timeline', font=dict(family='Arial', size=16), width=800, height=600)
-    
-               
-    
-                zero_duration_tasks = filtered_df[filtered_df[start_column] == filtered_df[finish_column]]
-    
-                status_colors = {
-                        'Future Task': '#aea7f1',
-                        'In Progress': 'blue',
-                        'Complete': 'limegreen'
-                    }
-    
-    
-    
-                y_labels_milestones = filtered_df['ID'].astype(str)
-                #fig.update_yaxes(tickmode='array', tick0=0, dtick=1)
-                # Check if any task is not complete
-                fig.add_trace(go.Scatter(x=zero_duration_tasks[start_column], y=zero_duration_tasks[id_col], mode='markers',
-                                marker=dict(symbol='star', color=[status_colors.get(status, 'gray') for status in zero_duration_tasks[status_column]], size=15,line=dict(
-                            color='black', width=1.5)), name='Milestones'))
-
-    
-    
-                # Set the x-axis to display ticks every month96
-                fig.update_layout(xaxis=dict(tickmode='linear', dtick='M1'))
-    
-    
-    
-                # Add a vertical line for the current time
-                fig.update_layout(xaxis=dict(showgrid=False),
-                                   shapes=[dict(type='line', xref='x', x0=now, x1=now, yref='paper', y0=0, y1=1,
-                                               line=dict(color='red', width=1, dash='dot'))])
-    
-                 # Update the y-axis to have unique and linearly spaced ticks
-                # Update the y-axis to have unique and linearly spaced ticks
-                #fig.update_layout(yaxis=dict(tickmode='array', tickvals=y_labels, ticktext=y_labels))
-    
                 # Display Gantt chart and filtered DataFrame
                 st.markdown('## Project Analysis')
+                fig_o = display_modified_gantt_chart(filtered_df, id_col, start_column, finish_column, status_column, now)
     
                 with st.container():
-                    st.subheader('Gantt Chart')
-                    st.plotly_chart(fig)
+                    st.subheader('Predecessors: Gantt Chart')
+                    st.plotly_chart(fig_o)
     
                 with st.container():
                     
-                    st.subheader('Filtered DataFrame')
+                    st.subheader('Predecessors:  Filtered DataFrame')
                     st.dataframe(filtered_df)
                     
         
@@ -612,10 +556,13 @@ if uploaded_file is not None:
                                 st.subheader("Updated DataFrame - Finish Dates")
                                 st.dataframe(filtered_df_selected)
 
-            
                                 display_modified_gantt_chart(filtered_df_selected, id_col, start_column, finish_column, status_column, now)
 
-
+                                if st.button("Static Gantt?", key="Gantt-modified"):
+                              
+                                    fig3 = mat_plot(filtered_df, id_col, start_column, finish_column, status_column, now)
+                                    # Display the figure using st.pyplot()
+                                    st.pyplot(fig3)
                                                                  
         else:
             st.write("No tasks found for the selected ID.")
