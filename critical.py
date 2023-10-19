@@ -1,3 +1,9 @@
+import databutton as db
+
+
+user = db.user.get()
+name = user.name if user.name else "you"
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -14,7 +20,102 @@ import matplotlib.patches as mpatches
 from matplotlib.markers import MarkerStyle
 import numpy as np
 
+
 from pandas.tseries.offsets import CustomBusinessDay
+
+def display_modified_gantt_chart(filtered_df_selected, id_col, start_column, finish_column, status_column, now):
+    # Sort the DataFrame by finish date and start date
+    filtered_df = filtered_df_selected.sort_values(by=[finish_column, start_column], ascending=False)
+    
+    # Define the corporate colors for the Gantt chart
+    colors = {'Complete': 'green', 'Late': 'red', 'On Schedule': 'orange', 'Future Task': 'purple'}
+    
+    # Create and display the Gantt chart
+    fig_modified = px.timeline(filtered_df, x_start=start_column, x_end=finish_column, y=id_col,
+                               color=status_column, color_discrete_map=colors)
+    fig_modified.update_layout(title='Modified Project Timeline', font=dict(family='Arial', size=16),
+                               width=800, height=600)
+    
+    # Add milestones as scatter markers
+    zero_duration_tasks_modified = filtered_df[filtered_df[start_column] == filtered_df[finish_column]]
+    status_colors = {
+        'Future Task': '#aea7f1',
+        'In Progress': 'blue',
+        'Complete': 'limegreen'
+    }
+    fig_modified.add_trace(go.Scatter(x=zero_duration_tasks_modified[start_column], y=zero_duration_tasks_modified[id_col],
+                                     mode='markers', marker=dict(symbol='star', color=[
+                                     status_colors.get(status, 'gray') for status in zero_duration_tasks_modified[status_column]],
+                                     size=15, line=dict(color='black', width=1.5)), name='Milestones'))
+    
+    # Set the x-axis tick format to display ticks every month
+    fig_modified.update_layout(xaxis=dict(tickmode='linear', dtick='M1'))
+    
+    # Add a vertical line for the current time
+    fig_modified.update_layout(xaxis=dict(showgrid=False),
+                               shapes=[dict(type='line', xref='x', x0=now, x1=now, yref='paper', y0=0, y1=1,
+                                            line=dict(color='red', width=1, dash='dot'))])
+    
+    # Display the modified Gantt chart
+    st.subheader('Modified Gantt Chart')
+    st.plotly_chart(fig_modified)
+
+
+def mat_plot(df, id_col, start_column, finish_column, status_column, now):
+                        # Convert start and finish dates to datetime objects
+                        df[start_column] = pd.to_datetime(df[start_column])
+                        df[finish_column] = pd.to_datetime(df[finish_column])
+                    
+                        # Sort tasks by finish date and then start date
+                        df = df.sort_values(by=[finish_column, start_column], ascending=False)
+                    
+                        # Define task colors based on status
+                        status_colors = {
+                            'Complete': 'green',
+                            'Late': 'red',
+                            'On Schedule': 'orange',
+                            'Future Task': 'purple'
+                        }
+                    
+                        # Create the Gantt chart figure
+                        fig, ax = plt.subplots(figsize=(12, 6))
+                    
+                        # Add each task as a horizontal bar
+                        for index, row in df.iterrows():
+                            start_date = row[start_column]
+                            end_date = row[finish_column]
+                            task_id = row[id_col]
+                            status = row[status_column]
+                    
+                            color = status_colors.get(status, 'gray')  # Default to gray if status not recognized
+                            ax.barh(task_id, end_date - start_date, left=start_date, color=color, edgecolor='black', linewidth=0.5)
+                    
+                        # Add milestones as stars
+                        zero_duration_tasks = df[df[start_column] == df[finish_column]]
+                        for index, row in zero_duration_tasks.iterrows():
+                            start_date = row[start_column]
+                            task_id = row[id_col]
+                            status = row[status_column]
+                    
+                            color = status_colors.get(status, 'gray')  # Default to gray if status not recognized
+                            ax.scatter(start_date, task_id, marker='*', color=color, s=100, zorder=10)
+                    
+                        # Set chart title and labels
+                        ax.set_title('Project Timeline', fontsize=16)
+                        ax.set_xlabel('Date')
+                        ax.set_ylabel('Task ID')
+                    
+                     
+                        # Add a vertical line for the current time
+                        ax.axvline(x=now, color='red', linestyle='dashed', linewidth=1)
+                        #ax.set_ylim(0.5, len(df) + 0.5)    
+                            # Rotate x-axis labels to prevent overlapping
+                        if len(df) > 20:
+                            plt.xticks(rotation=45)
+                        
+                        # Adjust layout and return the figure
+                        plt.tight_layout()
+                        return fig
 
 
 def calculate_days_to_start():
@@ -299,9 +400,9 @@ if uploaded_file is not None:
     if column_select_submit:
         if start_column is not None and finish_column is not None and status_column is not None and id_col is not None and duration_column is not None:
 
-        #df['New_Duration'] = df[duration_column].apply(duration_to_days)
-
-            df['new_Predecessors'] = df['Predecessors'].apply(extract_number)    
+            #df['New_Duration'] = df[duration_column].apply(duration_to_days)
+             st.success("All columns filled.")   
+            #df['new_Predecessors'] = df['Predecessors'].apply(extract_number)    
             
         else:
         
@@ -355,61 +456,7 @@ if uploaded_file is not None:
                 if st.button("Gantt Static Matplot Lib"):
 
                     
-                    def mat_plot(df, id_col, start_column, finish_column, status_column, now):
-                        # Convert start and finish dates to datetime objects
-                        df[start_column] = pd.to_datetime(df[start_column])
-                        df[finish_column] = pd.to_datetime(df[finish_column])
                     
-                        # Sort tasks by finish date and then start date
-                        df = df.sort_values(by=[finish_column, start_column], ascending=False)
-                    
-                        # Define task colors based on status
-                        status_colors = {
-                            'Complete': 'green',
-                            'Late': 'red',
-                            'On Schedule': 'orange',
-                            'Future Task': 'purple'
-                        }
-                    
-                        # Create the Gantt chart figure
-                        fig, ax = plt.subplots(figsize=(12, 6))
-                    
-                        # Add each task as a horizontal bar
-                        for index, row in df.iterrows():
-                            start_date = row[start_column]
-                            end_date = row[finish_column]
-                            task_id = row[id_col]
-                            status = row[status_column]
-                    
-                            color = status_colors.get(status, 'gray')  # Default to gray if status not recognized
-                            ax.barh(task_id, end_date - start_date, left=start_date, color=color, edgecolor='black', linewidth=0.5)
-                    
-                        # Add milestones as stars
-                        zero_duration_tasks = df[df[start_column] == df[finish_column]]
-                        for index, row in zero_duration_tasks.iterrows():
-                            start_date = row[start_column]
-                            task_id = row[id_col]
-                            status = row[status_column]
-                    
-                            color = status_colors.get(status, 'gray')  # Default to gray if status not recognized
-                            ax.scatter(start_date, task_id, marker='*', color=color, s=100, zorder=10)
-                    
-                        # Set chart title and labels
-                        ax.set_title('Project Timeline', fontsize=16)
-                        ax.set_xlabel('Date')
-                        ax.set_ylabel('Task ID')
-                    
-                     
-                        # Add a vertical line for the current time
-                        ax.axvline(x=now, color='red', linestyle='dashed', linewidth=1)
-                        #ax.set_ylim(0.5, len(df) + 0.5)    
-                            # Rotate x-axis labels to prevent overlapping
-                        if len(df) > 20:
-                            plt.xticks(rotation=45)
-                        
-                        # Adjust layout and return the figure
-                        plt.tight_layout()
-                        return fig
 
 
 
@@ -529,39 +576,47 @@ if uploaded_file is not None:
                             
                 
                     with st.container():
-                        st.subheader('Filtered DataFrame')
-                        st.dataframe(filtered_df)
+                        st.subheader('Predecessors Finish Dates')
+                        #st.dataframe(filtered_df)
                         
                 
                     
-                        # Allow the user to edit the finish dates dynamically
+                    # Allow the user to edit the finish dates dynamically
                         # Get the list of unique task IDs
-                        task_ids = filtered_df['ID'].unique().tolist()
+                        try:
+                            task_ids = filtered_df['ID'].unique().tolist()
+                        except TypeError:
+                            st.warning("No Predecessors found!")
+                        else:
+                            # Ask the user to select the task IDs to update the finish dates
+                            selected_task_ids = st.multiselect("Select Task IDs to Update Finish Dates", task_ids)
                     
-                        # Ask the user to select the task IDs to update the finish dates
-                        selected_task_ids = st.multiselect("Select Task IDs to Update Finish Dates", task_ids)
-                        # Filter the DataFrame based on the selected task IDs
-                        filtered_df_selected = filtered_df[filtered_df['ID'].isin(selected_task_ids)]
+                            # Filter the DataFrame based on the selected task IDs
+                            filtered_df_selected = filtered_df[filtered_df['ID'].isin(selected_task_ids)]
+  
+                            # Display the filtered DataFrame
+                            st.dataframe(filtered_df_selected)
                     
-                        # Display the filtered DataFrame
-                        st.dataframe(filtered_df_selected)
+                            # Ask the user if they want to modify the finish date column for the selected tasks
+                            update_finish_date = st.checkbox("Update Finish Dates for Selected Tasks")
                     
-                        # Ask the user if they want to modify the finish date column for the selected tasks
-                        update_finish_date = st.checkbox("Update Finish Dates for Selected Tasks")
+                            if update_finish_date:
+                                # Allow the user to edit the finish dates dynamically for the selected tasks
+                                for task_id in selected_task_ids:
+                                    finish_date = st.date_input(f"Edit Finish Date for Task {task_id}",
+                                                                filtered_df_selected.loc[filtered_df_selected['ID'] == task_id, finish_column].iloc[0],
+                                                                key=str(task_id))
+                                    filtered_df_selected.loc[filtered_df_selected['ID'] == task_id, finish_column] = finish_date
                     
-                        if update_finish_date:
-                            # Allow the user to edit the finish dates dynamically for the selected tasks
-                            for task_id in selected_task_ids:
-                                finish_date = st.date_input(f"Edit Finish Date for Task {task_id}", filtered_df.loc[filtered_df['ID'] == task_id, finish_column].iloc[0], key=str(task_id))
-                                filtered_df.loc[filtered_df['ID'] == task_id, finish_column] = finish_date
-                    
-                            # Update the original DataFrame with the modified finish dates
-                            filtered_df.update(filtered_df[finish_column])
+                                # Display the updated DataFrame with the modified finish dates
+                                st.subheader("Updated DataFrame - Finish Dates")
+                                st.dataframe(filtered_df_selected)
 
-                        
+            
+                                display_modified_gantt_chart(filtered_df_selected, id_col, start_column, finish_column, status_column, now)
 
-        
-                          
+
+                                                                 
         else:
             st.write("No tasks found for the selected ID.")
     else:
