@@ -392,6 +392,7 @@ if uploaded_file is not None:
         finish_column = st.selectbox('Select Finish Date Column', options=available_columns, index=available_columns.index('Finish') if 'Finish' in available_columns else 0)
         status_column = st.selectbox('Select Status Column', options=available_columns, index=available_columns.index('Status') if 'Status' in available_columns else 0)
         id_col = st.selectbox('Select ID Column', options=available_columns, index=available_columns.index('ID') if 'ID' in available_columns else 0)
+        predecessors_column = st.selectbox('Select Predecessors Column', options=available_columns, index=available_columns.index('Predecessors') if 'Predecessors' in available_columns else 0)
         # Submit button to submit the form
         column_select_submit = st.form_submit_button("Submit")
 
@@ -403,7 +404,7 @@ if uploaded_file is not None:
     # Only process the data if the form is submitted
 
     if column_select_submit:
-        if start_column is not None and finish_column is not None and status_column is not None and id_col is not None and duration_column is not None:
+        if start_column is not None and finish_column is not None and status_column is not None and id_col is not None and duration_column is not None and and predecessors_column is not None:
 
             #df['New_Duration'] = df[duration_column].apply(duration_to_days)
              st.success("All columns filled.")   
@@ -431,7 +432,7 @@ if uploaded_file is not None:
 
     if task_id:
 
-        df['new_Predecessors'] = df['Predecessors'].apply(extract_number)
+        df['new_Predecessors'] = df[predecessors_column].apply(extract_number)
         
         filtered_df = filter_predecessors(df, task_id)
    
