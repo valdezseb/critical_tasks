@@ -350,13 +350,16 @@ def load_data(uploaded_file):
 
   
     return df
-def filter_predecessors(df, id):
-    predecessors = df[df['ID'] == id]['new_Predecessors'].tolist()[0]
+def filter_predecessors(df, id, id_col):
+    predecessors_list = df[df[id_col] == id]['new_Predecessors'].tolist()
+    if not predecessors_list:
+        return None
+    predecessors = predecessors_list[0]
     if predecessors is None:
         return None
     else:
         predecessors_list = [int(x) for x in predecessors.split(',') if x]
-        return df[df['ID'].isin(predecessors_list)]
+        return df[df[id_col].isin(predecessors_list)]
 
 
 
@@ -434,7 +437,7 @@ if uploaded_file is not None:
 
         df['new_Predecessors'] = df[predecessors_column].apply(extract_number)
         
-        filtered_df = filter_predecessors(df, task_id)
+        filtered_df = filter_predecessors(df, task_id, id_col)
    
 
 
