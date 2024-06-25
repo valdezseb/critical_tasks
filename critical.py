@@ -404,7 +404,7 @@ if uploaded_file is not None:
     # Only process the data if the form is submitted
 
     if column_select_submit:
-        if start_column is not None and finish_column is not None and status_column is not None and id_col is not None and duration_column is not None and and predecessors_column is not None:
+        if start_column is not None and finish_column is not None and status_column is not None and id_col is not None and duration_column is not None and predecessors_column is not None:
 
             #df['New_Duration'] = df[duration_column].apply(duration_to_days)
              st.success("All columns filled.")   
