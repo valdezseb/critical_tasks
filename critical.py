@@ -276,35 +276,25 @@ def duration_to_days(duration):
 def days_to_start(df, id_col, start_col, pred_col, status_col, finish_col):
     df[start_col] = pd.to_datetime(df[start_col])
     df[finish_col] = pd.to_datetime(df[finish_col])
-    last_finish_dates = {}
-
+    # Initialize 'Days_to_Start' column with zeros
+    df['Days_to_Start'] = 0
     for index, row in df.iterrows():
         task_id = row[id_col]
         pred_ids = row[pred_col]
-
-        if pd.isna(pred_ids):
-            df.at[index, 'Days_to_Start'] = 0
-        else:
+        if pd.notna(pred_ids):
             pred_finish_dates = []
-            for pred_id in pred_ids.split(','):
-                if pred_id:
-                    pred_df = df[(df[id_col] == int(pred_id)) & (df[status_col] != "Complete")].sort_values(by=finish_col, ascending=False)
+            for pred_id in str(pred_ids).split(','):
+                pred_id = pred_id.strip()
+                if pred_id and pred_id.isdigit():
+                    pred_df = df[(df[id_col] == int(pred_id)) & (df[status_col] != "Complete")]
                     if not pred_df.empty:
-                        pred_finish_date = pred_df[finish_col].values[0]
+                        pred_finish_date = pred_df[finish_col].max()
                         pred_finish_dates.append(pred_finish_date)
-
             if pred_finish_dates:
                 latest_finish_date = max(pred_finish_dates)
                 task_start_date = row[start_col]
-
                 days_to_start = (latest_finish_date - task_start_date).days
-
-                df.at[index, 'Days_to_Start'] = days_to_start
-            else:
-                df.at[index, 'Days_to_Start'] = 0
-
-        last_finish_dates[task_id] = row[finish_col]
-
+                df.at[index, 'Days_to_Start'] = max(0, days_to_start)
     return df['Days_to_Start']
 
 
